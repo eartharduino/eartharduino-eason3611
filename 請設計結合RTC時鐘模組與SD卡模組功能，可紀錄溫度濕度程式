@@ -1,3 +1,59 @@
-請運用DHT22及RTC時鐘模組與SD卡模組，可將時間、溫度、濕度資料紀錄在SD卡檔案內。
-資料格式：日期，時分秒，溫度，濕度。
-完成期限：108年11月17日
+#include <SPI.h>
+#include <SD.h>
+#include "DHT.h"        // 匯入DHT函式庫
+#define DHTPIN 2        // 定義DHT函式庫中，所使用的訊號來源
+#define DHTTYPE DHT22   // 定義DHT函式庫中，所使用的感測器
+DHT dht(DHTPIN, DHTTYPE);
+
+File myF;
+int i=0;
+void setup() {
+  // Open serial communications and wait for port to open:
+  Serial.begin(9600);
+ 
+  while (!Serial) {
+    ; // wait for serial port to connect. Needed for native USB port only
+  }
+
+  dht.begin();
+}
+
+void loop() {
+  delay(2000);                         // 每次測量間隔
+ 
+  float dhtT = dht.readTemperature();    //設定浮點變數dhtT，讀取溫度
+  float dhtH = dht.readHumidity();       //設定浮點變數dhtH，讀取濕度
+  Serial.print("Temperature: ");        //序列埠監控視窗印出文字
+  Serial.print(dhtT);                   //序列埠監控視窗印出dhtT數值
+  Serial.print(" *C ");
+  Serial.print("Humidity: ");
+  Serial.print(dhtH);                 //序列埠監控視窗印出dhtH數值
+  Serial.println(" % ");
+
+  if (!SD.begin(4)) {
+
+    while (1);
+  }
+
+
+  // open the file. note that only one file can be open at a time,
+  // so you have to close this one before opening another.
+  myF = SD.open("clock.txt", FILE_WRITE);
+
+  // if the file opened okay, write to it:
+  if (myF) {
+   
+    myF.print(dhtT);
+    myF.print(",");
+    myF.println("clock");
+    i++;
+    delay(10000);
+    // close the file:
+    myF.flush();
+   
+  } else {
+    // if the file didn't open, print an error:
+
+  }
+}
+
